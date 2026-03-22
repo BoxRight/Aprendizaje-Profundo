@@ -1,0 +1,765 @@
+Maximum Velocity of Human Movement used for
+Human Fall Detection using a Support Vector
+Machine classifier for Doppler Radar Sensors Data
+Anonymous
+
+Abstract— The feasibility of detecting falls among different
+human activities based on micro-Doppler signatures is
+investigated. This study uses the University of Glasgow Radar
+Signature dataset, consisting of recordings from 72 persons
+performing six different activities, including falls. The maximum
+velocity that each person reached while performing an activity was
+extracted from the Doppler spectrogram and used to train a
+Support Vector, to distinguish falls from other activities. The
+model’s performance is evaluated, to assess the potential of using
+maximum speed as the classification feature on real-world
+applications for fall detection.
+Keywords—Fall detection, Support Vector Machines.
+
+I. INTRODUCTION
+“Population ageing is a triumph of
+humanity but also a challenge to
+society” [1]
+
+fallen, the older persons infrequently used the alarm to request
+help. The article states that a better way to avoid this “long lie”
+problem is to use smart technology for automatic fall detection
+to automatically notify caregivers and emergency services
+about the accident.
+Around the world, many organizations and researchers are
+approaching the problem from three different points of view: 1)
+preventing falls, 2) getting help for a person when a fall has just
+occurred and 3) giving the proper medical care and rehabilitation
+after the fall. This study focuses on technologies for automatic
+fall detection, which addresses item 2: getting help when a
+person has fallen and can’t get up by himself.
+There are many options for fall detection. On their 2014
+article, Delahoz and Labrador [7] present a classification scheme
+for Fall Detection Systems (FDS):
+
+Approximately 28-35% of people aged of 65 and over, fall
+each year. This figure increases to 32-42% for people over 70
+years of age [2]. The situation is not different in Mexico.
+According to a document published by CENAPRECE [3] 65%
+of older adults (“adultos mayores” in the original document in
+Spanish) who don’t live alone, suffer falls. 40% of those who
+live on an assisted living facility and 20% of those who are
+interned in a hospital fall at least once a year. Accidents, both
+inside and outside the home, are the 6th leading cause of
+morbidity in people over 65 and are the 5th leading cause of
+death in older adults. Of these accidents, 70% are due to falls.
+Old people will inevitably fall with a certain frequency:
+according to [2] and [3], once a year on average. Even if a person
+never leaves home, or even if the person lives in an assisted
+living facility, falls may occur. They may occur when an older
+person is alone, in the bathroom, in the kitchen, in the garden.
+Falls may be caused by poor vision, a slippery floor, unstable
+furniture, even a pet. Nooruddin et al [5] have pointed out that
+making the entire living environment fall-proof is not a feasible
+solution.
+According to an article by Blackburn et al [6], after a person
+has fallen, and is unable to stand up by himself, the main risk
+derives from the “long lie”, a term for the physical and clinical
+outcomes in older people who lie a substantial amount of time
+on the floor before receiving help. The same article also states
+that even when a personal alarm was available, when they have
+
+Fig. 1. Fall detection systems classification. (Delahoz and Labrador [7]
+p.19821 Fig. 6)
+
+According to the previously mentioned work by Blackburn
+et al, fall detection by external sensors should be preferred over
+wearable sensors because they do not impose any burden on the
+person being protected by the system.
+The goal of this work is to evaluate the use of maximum
+speed detected by a Doppler Radar, to classify a human action
+as a fall. The use of just one feature for classification may be
+useful for applications that need to respond on real time. The
+work uses a Support Vector Machine to classify the signals.
+
+II. RELATED WORK
+Nooruddin et al [5] reviewed many FDS, spanning a very
+comprehensive spectrum of technologies, including singlesensor and multi-sensor systems, and wearable and external
+systems. They evaluated the systems using the Accuracy,
+Sensitivity and Specificity metrics typically used in fall
+detection literature to rate these systems. They concluded that
+the number of sensors does not normally impact the system`s
+accuracy. They also noted that accuracy is more dependent on
+the features selected for classification in the system. Their article
+identifies strengths and weaknesses for the different sensor
+technologies: accelerometers are the best for wearable solutions;
+Kinect sensors cannot be used outdoors because sunlight affects
+their accuracy and their ability to estimate depth. Sound sensors
+are ubiquitous and nonintrusive but can generate false alarms
+due to ambient noise and raise privacy concerns. Wearable
+motion sensors are compact and respect privacy, but they require
+frequent charging. Computer-vision or surveillance-based fall
+detection systems need huge amounts of processing power. Hsu
+et al [8] state that all those issues can be avoided with millimeterwave radar or microwave sensors, using electromagnetic waves
+Doppler effect. Hu, Cao et all explore the details of Wi-fi and
+radar sensors [9]: they are noninvasive, they ensure privacy.
+Radio wave technology can detect through obstructions like
+walls, is not affected by environmental conditions such as poor
+lighting, and can operate efficiently in low power. Another
+important factor for FDS, is cost, since for FDS be practical, they
+should be designed to be both very reliable and affordable, so
+they are widely available for people who need them.
+In the past few years, deep learning and related classification
+technologies have gained considerable interest in radar-based
+FDS, because they extract salient features from radar signals in
+an automatic fashion. The problem is that deep learning methods
+require a large amount of training data, and the actual fall
+detection requires a large amount of computational and memory
+resources. Most current deep learning approaches require a long
+latency even at the inference/testing stage, because of complex
+data processing methods or deep neural networks. Current
+research is very focused on accuracy, ignoring computational
+cost. Li, Le Kernec et al [10] have explored the requirements of
+FDS systems to be deployed on resource-constrained platforms.
+The consideration of the balance between efficiency and
+performance is a main item when selecting the most suitable
+algorithms. A natural step, after classification algorithms
+development is how to approach a real-time implementation of
+radar-based fall detection in constrained platforms.
+
+III. METHOD
+A. Software tools
+MATLAB R2025b is used to process the data and to test the
+different data processing methods to transform the input signal,
+extract the relevant features and identify falls. The steps of the
+method to train the model and to classify the data are
+documented as MATLAB code. Different MATLAB libraries
+were used to process and transform radar data, for training the
+model and for testing it. The MATLAB code is useful for rapid
+developing and testing different models and approaches, and it
+
+is also useful to write production quality software programs for
+the training component and for the classifier component.
+B. Training and test data
+The University of Glasgow Radar Signature dataset [11] was
+used. The data gathering process is documented at the URL
+shown in reference [11]. In summary, data was generated by a
+Frequency Modulated Continuous Wave (FMCW) radar,
+operating at the 5.8 GHz band, with a chirp (a frequency sweep)
+that was repeated each millisecond and to digitize it, was
+sampled 128 times per sweep. Note that the term “beat” is
+sometimes used instead of “sweep” in FDS articles. The signal
+has a 400 MHz bandwidth. The data contains a record for each
+sample, that is a complex number, where the In-phase data for
+the sample is the real part and the Quadrature data for the sample
+is the complex part. Each file contains either 10 seconds or 5
+seconds of radar data for a motion capture, i.e. 1,280,000 records
+or 640,000 records. Also, each file includes four records; the
+first one contains the band (5.8 GHz), the second has the chirp
+duration (1 ms), the third has the number of samples per sweep
+(128) and the fourth shows the bandwidth (400 MHz).
+There is a total of 1,754 files, recorded by 72 participants
+aged between 21 and 98 years old. The total space required by
+the data files is 15.9 Gigabytes. Each participant performed six
+activities in front of the radar device. The radar has one antenna
+for sending the signals and one for receiving the signals. The
+person does not use any sensors. Older individuals didn’t
+perform the “Falling” activity, to avoid the possibility of injuries
+for them. Because of this, it can be seen on Table I that there are
+less files for activity number 6: Falling. Each activity was
+repeated 3 times. The activities were performed indoors. Only a
+single person is measured each time. The following table
+summarizes the data files information:
+TABLE I.
+Activity
+number
+1
+2
+3
+
+GLASGOW DATA FILES
+
+Description
+Walking back and
+forth
+Sitting down on a
+chair
+Standing up from a
+chair
+
+Number
+of files
+
+Activity
+duration
+(seconds)
+
+312
+
+10
+
+15.4
+
+312
+
+5
+
+7.7
+
+311
+
+5
+
+7.7
+
+Size
+(Mbytes)
+
+4
+
+Picking up an object
+
+311
+
+5
+
+7.7
+
+5
+
+Drinking water
+
+310
+
+5
+
+7.7
+
+6
+
+Falling
+
+198
+
+5
+
+7.7
+
+File names have a structure that gives information about its
+contents. The first character of the name is the Activity Number
+from 1 to 6 (First column of Table I). Character 2 is a ‘P’ and
+characters 3 and 4 are a number from 01 to 72, identifying the
+person who executes the activity: for example, person ‘P01’ is
+person number 1. Character 5 is an ‘A’ and characters 6 and 7
+are a number from 01 to 06, stating the Activity Number again.
+Character 8 is letter ‘R’ and character 9 is a number in the range
+1-3; this indicates which repetition of the activity is recorded in
+the file. The file extension is ‘.dat’. For example, file
+
+1P01A01R2.dat has the data for Person 1 executing the second
+repetition of activity ‘Walking back and forth’.
+A sample of the files was used for training the model. Since
+the files record either a fall or an activity that is not a fall, the
+variable we wish to predict is a binary variable, and a binomial
+distribution is appropriate for this kind of data.
+As seen on Table 1, there proportion of files for each activity
+is 17.7% of the total file count, except for Fall files. The
+proportion is:
+𝑝=
+
+198
+= 0.1129
+1754
+
+The formula for calculating the sample size for a
+dichotomous (binary) variable [12] is based on the statistic
+properties of the binomial distribution:
+𝑛=
+
+𝑍 ! ∙ 𝑝 ∙ (1 − 𝑝)
+𝑑!
+
+Where:
+• 𝑍 is the critical value for the desired confidence level
+• 𝑝 is the expected proportion of falls on the data
+• 𝑑 is the desired margin of error
+Selecting a 95% confidence level, we have 𝑍 = 1.96 ,
+𝑝 = 0.1129 , 𝑑 = 0.05 , we have n = 153.8819, so the
+sample size will be 154 files.
+
+SVMs successfully for array signal processing, On Table 1 of
+[9], 20 studies used Convolutional Neural Networks (CNN) as a
+classifier, while 19 studies used SVM. The third most-used
+classifier is K-Nearest Neighbors (KNN) with 12 studies. As
+shown on Tables 2-5 of [9], SVM has a very good performance,
+compared to CNN.
+MATLAB supports SVM training and prediction on their
+“Statistics and Machine Learning Toolbox”.
+The SVM will be fed an interval of Doppler signals gathered
+by a Radar device and returned as a series of samples for an
+interval of time, and from them, it will classify if the recorded
+activity is a fall or not.
+D. Feature Selection and Extraction.
+Data files contain a record for each one of the 128 samples
+taken for each “chirp” echoed by the target, i.e. the person who
+is performing the activity in front of the radar. A chirp is sent
+every millisecond, and the activity is recorded for 5 seconds,
+except for the “Walking back and forth” activity which lasts 10
+seconds: 5 for walking forth and 5 for walking back. The first
+step is to rearrange the data in a matrix where we have one row
+for each millisecond, and each row has 128 columns, with the
+samples. The next step is to take the Fast Fourier Transform
+(FFT) for the matrix, using a Hamming window to reduce the
+noise. This transforms the matrix to Velocity vs Time. If we
+apply a second FFT, we obtain the Doppler matrix, the
+spectrogram, which characterizes each action. Let’s look at the
+spectrograms for Persons 36, 37 and 38, during two activities:
+sitting on a chair, and falling:
+
+For training the model, files were selected randomly for each
+activity, according to the following table:
+TABLE II.
+
+FILES SELECTED FOR TRAINING THE MODEL
+
+Activity
+number
+
+Description
+
+Number
+of files
+
+1
+
+Walking back and forth
+
+28
+
+2
+
+Sitting down on a chair
+
+28
+
+3
+
+Standing up from a chair
+
+27
+
+4
+
+Picking up an object
+
+27
+
+5
+
+Drinking water
+
+27
+
+6
+
+Falling
+
+17
+
+Total
+
+Sitting
+
+Person
+36
+
+154
+
+C. Classifier for Fall Detection
+Hu et al [9] surveyed 74 studies on radar-based fall detection.
+The survey includes different radar formats, different classifiers,
+and the rating of each study’s model using Accuracy, Precision
+and Recall. Given the goal of detecting falls with technologies
+that require low resources, compared to those used typically by
+Deep Learning solutions.
+Support Vector Machines (SVM) has been used extensively
+for its superior performance over other classification methods,
+such as the Fisher Linear Discriminator and the Bayesian
+Method (Kim et al [13]). Many Radar researchers have applied
+
+Person
+37
+
+Falling
+
+𝐹1 =
+
+Person
+38
+
+Fig. 2.
+
+!
+
+(4)
+
+!
+!
+"#$%&'&() *$%+,,
+
+IV. RESULTS
+The SVM processed the rest of the University of Glasgow
+files. with 154 files: see Table II.
+Spectrogram comparison of two activities for three different persons.
+
+Figure 2 clearly shows that spectrograms for the same
+activity for different persons have a similar signature, while
+spectrograms of different activities have clearly different
+signatures, so velocity is a feature for identifying falls.
+When a person falls, the sudden change of position manifests
+as an increase in velocity. The University of Glasgow data has
+5-second samples, so the feature will be the maximum velocity
+recorded during the 5 second interval. Because of this,
+maximum velocity in the interval will be used for the SVM. The
+following block diagram shows how the data is processed and
+classified.
+
+There were a total 72 participants recorded by the radar, so
+the training sample has records for most of the participants. The
+number of samples for falls is low, and the cause of this is that
+it was difficult for the University of Glasgow to record many
+persons falling, and because of the possible risk, none of the
+older persons performed any falls. Also, there are close to three
+repetitions for each participant for each activity, so this is a
+representative sample.
+After training the SVM with this data, another sample with
+316 files was obtained to forecast falls. The following table
+shows the summary information.
+TABLE III.
+
+SAMPLE FOR TESTING THE SVM
+Repetitions
+
+Count
+Persons in the sample
+
+70
+
+1
+
+2
+
+3
+
+Walking back and forth
+
+48
+
+16
+
+13
+
+19
+
+Sitting down on a chair
+
+59
+
+22
+
+23
+
+14
+
+Standing up from a chair
+
+60
+
+17
+
+16
+
+27
+
+Picking up an object
+
+55
+
+15
+
+25
+
+15
+
+Drinking water
+
+57
+
+15
+
+23
+
+19
+
+Falling
+
+37
+
+12
+
+13
+
+12
+
+The testing data is also a representative sample of the
+University of Glasgow data files.
+
+Fig. 3. Data processing blok diagram
+
+E. Training.
+MATLAB was used to train a SVM model. Function
+‘fitscsvm’ was used specifying a linear kernel function. Threehundred sixteen files were selected at random from the files, to
+be used for training, and the rest of them were used to evaluate
+the model.
+F. SVM Model evaluation.
+Hu et al [9] use Recall, Precision and F1 to evaluate the SVM
+models in their survey, so those metrics will be computed for the
+proposed model and compared against those shown on Table 3
+of [9] to determine the quality of the model. Shalev-Schwartz
+and Ben-David [15] explain how to calculate the metrics.
+"#$% '()*+*,%)
+
+𝑅𝑒𝑐𝑎𝑙𝑙 = "#$% '()*+*,%)-./0)% 1%2/+*,%)
+"#$% '()*+*,%)
+
+𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 = "#$% '()*+*,%)-./0)% '()*+*,%)
+
+(3)
+(4)
+
+The following table shows the metrics obtained for the
+testing data and compares them to results reported on Hu et al
+[9].
+
+TABLE IV.
+
+COMPARISON BETWEEN SVM MODELS
+Metrics
+
+Article
+This article
+Garripoli et al.
+[16]
+Amin et al. [17]
+Hanifi et al. [18]
+Erol et al. [19]
+Erol et al. [20]
+
+Motions
+Six activities, 37
+falls
+Four activities, 65
+falls
+19 types of falls,
+14
+types
+of
+nonfalls
+543 falls and 675
+nonfalls
+Four
+activities,
+106 samples
+Four
+activities,
+106 samples
+
+Precision
+
+Recall
+
+F1
+
+75%
+
+72%
+
+75%
+
+100%
+
+100%
+
+100%
+
+100%
+
+82%
+
+Not
+available
+
+88%
+
+87%
+
+88%
+
+97.7%
+
+94.7%
+
+96.2%
+
+99.6%
+
+99.6%
+
+100%
+
+[3]
+
+Metrics
+Erol et al. [21]
+
+25
+falls,
+nonfalls
+
+47
+
+100%
+
+95%
+
+97.5%
+
+V. DISCUSSION
+The metrics obtained for this SVM are not good enough to
+be used for a real application. There may be two reasons: either
+the feature is not adequate, or the model is not adequate. To
+eliminate the possibility that the problem lies on SVM, further
+work is needed: 1) Establish a baseline, using Logistic
+Regression. 2) Train two other models, k-NN and Random
+Forest. The comparison of the results of the SVM against these
+other models should allow to evaluate if the problem lies with
+the usage of SVM. To eliminate the possibility that the problem
+lies on the selected feature, a pair of new features should be used:
+Standard Deviation of the Velocity and Acceleration look
+promising. The state of the art of fall detection obtains higher
+metrics than what was achieved on this work, so this further
+work is desirable. Using a set of more sophisticated features than
+those used on this study may also be done. For example, in [20]
+combined Range and Doppler features and obtained very high
+metrics.
+VI. CONCLUSIONS
+A better model should be built, trying different classifiers
+and different features. A better model should be useful to
+establish a baseline for developing a system that can be used in
+real world applications, and this is desirable, because the costs
+of current radar-based configurations are prohibitive for massive
+deployments at hospitals and assisted care facilities, and for
+domestic use.
+Li, Le Kernec et al [9] reported in 2023 a very exciting
+technique where they used a magnitude thresholding approach,
+which allows to pinpoint the region where the activities features
+are located, separating them from the signal’s noise. Also, this
+technique reduces the amount of data to be processed, reducing
+both the training time and memory footprint.
+VII. LIMITATIONS AND FUTURE WORK
+This model was not designed to be able to run on a
+continuous basis: it assumed that data is provided in files that
+record 5-second intervals. A workable solution should be able to
+process data on a continuous basis. A promising project is to use
+Li and Le Kernec’s techniques [9] and determine how the model
+should be built such as to be able to process continuous signals.
+The use of boosting algorithms like XGBoost or LightGBM may
+help to solve the problem of processing data on a continuous
+basis.
+REFERENCES
+[1]
+
+[2]
+
+“Active Ageing: A Policy Framework. Geneva.” World Health
+Organization, p. 6, 2002. [Online]. Available:
+https://extranet.who.int/agefriendlyworld/wpcontent/uploads/2014/06/WHO-Active-Ageing-Framework.pdf
+“WHO Global Report on Falls Prevention in Older Age.” WHO Press,
+pp. 1-4, 2007. [Online]. Available:
+https://iris.who.int/server/api/core/bitstreams/e178a56b-a9b8-402d80a5-0d8d9ebf6a5d/content
+
+“Prevención y Atención de las Caídas en la Persona Adulta Mayor.”
+CENAPRECE, 2013. Accessed: Nov. 04, 2025. [Online]. Available:
+http://www.cenaprece.salud.gob.mx/programas/interior/adulto/descargas
+/pdf/Guia_Caidas_2aa.pdf
+[4] UN Department of Economic and Social Affairs, “World Population
+Ageing 2020 Highlights.” p. 1. Accessed: Sept. 13, 2025. [Online].
+Available:
+https://www.un.org/development/desa/pd/sites/www.un.org.developmen
+t.desa.pd/files/undesa_pd2020_world_population_ageing_highlights.pdf
+[5] S. Nooruddin, M. Islam, F. A. Sharna, H. Alhetari, and M. N. Kabir,
+“Sensor-based fall detection systems: a review,” Journal of Ambient
+Intelligence and Humanized Computing, p. 1, Mar. 2021.
+[6] J. Blackburn, K. Ousey, J. Stephenson, and S. Lui, “Exploring the impact
+of experiencing a long lie fall on physical and clinical outcomes in older
+people requiring an ambulance: A systematic review,” International
+Emergency Nursing, vol. 62, no. 101148, 2022.
+[7] Y. S. Delahoz and M. Á. Labrador, “Survey on Fall Detection and Fall
+Prevention Using Wearable and External Sensors,” Sensors, vol. 2014,
+no. 14, Oct. 2014, doi: 10.3390/s141019806.
+[8] W.-L. Hsu, J.-X. Liu, C.-C. Yang, and J.-S. Leu, “A Fall Detection
+System Based on FMCW Radar Range-Doppler Image and Bi-LSTM
+Deep Learning,” IEEE Sensors Journal, vol. 23, no. 18, Aug. 2023.
+[Online]. Available: https://ieeexplore.ieee.org/document/10209420
+[9] S. Hu, S. Cao, N. Toosizadeh, J. Barton, M. G. Hector, and M. J. Fain,
+“Radar-Based Fall Detection: A Survey,” IEEE Robotics and Automation
+Magazine,
+vol.
+31,
+no.
+3,
+Sept.
+2024,
+doi:
+https://doi.org/10.1109/MRA.2024.3352851.
+[10] Z. Li, J. Le Kernec, Q. Abbasi, F. Fioranelli, S. Yang, and O. Romain,
+“Radar-based human activity recognition with adaptive thresholding
+towards resource constrained platforms,” Sci Rep, vol. 13, no. 3473
+(2023), Mar. 2023, doi: https://doi.org/10.1038/s41598-023-30631-x.
+[11] F. Fioranelli, A. Shah, H. Li, A. Shrestha, S. Yang, and J. Le Kernec,
+“Radar
+Signature
+of
+Human
+Activities.”
+2019.
+doi:
+https://doi.org/10.5525/gla.researchdata.848.
+[12] R. V. Hogg and E. A. Tanis, Probability & Statistical Inference. New
+York, USA: McMillan Publishing Co. Inc., 1977.
+[13] Y. Kim and H. Ling, “Human Activity Classification Based on MicroDoppler Signatures Using a Support Vector Machine,” IEEE T.
+Geoscience and Remote Sensing, vol. 47, no. 5, pp. 1328–1337, doi:
+https://doi.org/10.1109/TGRS.2009.2012849.
+[14] M. A. Richards, Fundamentals of Radar Signal Processing. McGraw-Hill
+Companies, Inc., 2005.
+[15] S. Shalev-Schwartz and S. Ben-David, Understanding Machine
+Learning: from theory to algorithms. Cambridge University Press, 2018.
+[16] C. Garripoli et al., “Embedded DSP-based telehealth radar system for
+remote in-door fall detection,” IEEE J. Biomed. Health Inform., vol. 19,
+no. 1, pp. 92–101, Jan. 2015, doi: 10.1109/JBHI.2014.2361252.
+[17] M. G. Amin, Y. D. Zhang, F. Ahmad, and K. D. Ho, “Radar signal
+processing for elderly fall detection: The future for in-home monitoring,”
+IEEE Signal Process. Mag., vol. 33, no. 2, pp. 71–80, Mar. 2016, doi:
+10.1109/MSP.2015.2502784.
+[18] K. Hanifi and M. E. Karsligil, “Elderly fall detection with vital signs
+monitoring using CW Doppler radar,” IEEE Sensors J., vol. 21, no. 15,
+pp. 16,96916,978, Aug. 2021, doi: 10.1109/JSEN.2021.3079835.
+[19] B. Erol, M. G. Amin, B. Boashash, F. Ahmad, and Y. D. Zhang,
+“Wideband radar based fall motion detection for a generic elderly,” in
+Proc. 50th Asilomar Conf. Signals, Syst. Comput., 2016, pp. 1768–1772,
+doi: 10.1109/ ACSSC.2016.7869686.
+[20] B. Erol and M. G. Amin, “Fall motion detection using combined range
+and Doppler features,” in Proc. 24th Eur. Signal Process. Conf.
+(EUSIPCO), Piscataway, NJ, USA: IEEE Press, 2016, pp. 2075–2080,
+doi: 10.1109/ EUSIPCO.2016.7760614.
+[21] . Erol, M. Amin, Z. Zhou, and J. Zhang, “Range information for reducing
+fall false alarms in assisted living,” in Proc. IEEE Radar Conf.
+(RadarConf), Piscataway, NJ, USA: IEEE Press, 2016, pp. 1–6, doi:
+10.1109/RADAR. 2016.7485176.
+
+

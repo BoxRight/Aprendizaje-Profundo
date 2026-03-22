@@ -1,0 +1,195 @@
+Sistemas de Detección de
+Caídas
+INVESTIGACIÓN I
+TERCERA PRESENTACIÓN DE AVANCE
+FILIBERTO LÓPEZ DURÁN
+
+PREGUNTA DE INVESTIGACIÓN
+• ¿Cómo diseñar un algoritmo de baja latencia, que pueda
+responder a tiempo real, suceptible de ser usado en dispositivos
+vestibles, IoT o computadoras caseras?
+
+ARQUITECTURA DE SISTEMAS DE
+DETECCIÓN DE CAÍDAS
+Ambiente
+
+Recolección
+de Datos
+
+Extracción de
+Características
+
+Módulo de
+Aprendizaje
+
+Laboratorio
+Server
+
+Modelo
+Entrenado
+
+Ambiente
+
+Recolección
+de Datos
+
+Extracción de
+Carácterísticas
+Edge Computer
+
+Sensores
+
+Clasificador
+
+Actuador
+
+Usuario
+
+ARQUITECTURA DE SISTEMAS DE
+DETECCIÓN DE CAÍDAS
+Ambiente
+
+Recolección
+de Datos
+
+Extracción de
+Características
+
+Laboratorio
+
+Módulo de
+Aprendizaje
+
+Server
+
+Modelo
+Entrenado
+
+Ambiente
+
+Recolección
+de Datos
+
+Extracción de
+Carácterísticas
+Edge Computer
+
+RADAR
+
+Sensores
+
+”FEATURES” más relevantes
+para el clasificador
+
+Clasificador
+
+Actuador
+
+Usuario
+Computadora
+”Doméstica”
+
+PREGUNTA DE INVESTIGACIÓN
+• ¿Cómo diseñar un algoritmo de baja latencia, que pueda
+responder a tiempo real, para RADAR, suceptible de ser usado en
+computadoras caseras?
+
+¿Porqué RADAR?
+• Tecnología no invasiva – asegura la privacidad
+• Los muros no impiden la detección
+• Funcionan en luz y obscuridad
+• Requieren poca electricidad
+
+Detección de movimiento humano por
+diferentes tipos de Radar
+
+Detección de Caídas con Radar
+Tipo de Detección
+
+Clasificadores
+
+Estudios
+
+Micro Doppler
+
+kNN(6), SVM(14), LSTM(4),
+CNN(14)
+
+47
+
+Range Doppler
+
+SVM(4), LSTM(2), KNN(4),
+CNN(4)
+
+19
+
+Range Angles
+
+CNN(2), LSTM(1), kNN(1)
+
+5
+
+Point Cloud
+
+Variational RNN Autoencoder,
+Backpropagation Neural
+Network
+
+2
+
+Limitaciones de Radar
+• Factores ambientales como la interferencia de dispositivos
+electrónicos y materiales de metal pueden afectar la señal
+• Cambios en los muebles, o introducción de objetos grandes
+puede requerir recalibración
+• La resolución de los radares depende mucho de la calidad del
+hardware
+
+Juegos de datos de Radar
+Nombre
+mmFall Dataset
+
+Descripción
+URL
+This dataset is collected with millimeter-wave (mmWave) radar and https://github.com/radar-lab/mmfall
+includes point cloud data for various activities and simulated falls.
+Features point clouds, body centroid positions, and is available for
+research use. The collection protocol focuses on privacy and high
+sensitivity to motion, with semi-supervised labeling based on
+inference from normal daily activity
+
+PeerJ Multimodal Dataset
+
+Contains synchronized recordings from multiple sensors, including https://pmc.ncbi.nlm.nih.gov/articles/PMC119704
+60–64 GHz radar, 8×8 LIDAR, FIR thermal camera, and a mobile 14/
+phone’s 3D accelerometer. Its design is privacy-conscious (no
+RGB cameras) and supports sensor fusion research. The dataset
+documents ten participants and ten fall types, along with multiple
+https://doi.org/10.17605/OSF.IO/YJGDV
+daily activities
+
+PARrad Dataset
+
+Focuses on healthcare support via activity recognition with radar,
+including critical events like falls, though specific download
+instructions and meta-data should be verified by contacting the
+project directly
+
+Radar Human Activity Datasets Datasets such as the one in Nature (2023) contain radar data for
+six types of daily human activities, including falling, collected for
+activity recognition and fall detection
+
+https://sumo.ilabt.imec.be/parrad
+
+https://link.springer.com/article/10.1007/s00521022-07229-x
+https://www.nature.com/articles/s41598-02330631-x#data-availability
+https://researchdata.gla.ac.uk/848/
+
+Siguientes pasos
+• Análisis exploratorio a los Juegos de Datos identificados
+• Investigar más detalles respecto a los tipos de Radar usados
+
+Gracias por su atención
+
+

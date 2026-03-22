@@ -1,0 +1,89 @@
+Information Sheet – February 2019
+Title of the study: Human Activities Classification and Fall Detection with Wearable Sensors
+and Radar
+Researchers: Aman Shrestha (PhD), Haobo Li (PhD), Dr Syed Aziz Shah (Research Assistant),
+Dr Francesco Fioranelli (Lecturer)
+
+
+What is the purpose of this research? The purpose of the research is to classify different
+human activities and identify critical events such as falls. This can help to develop systems for
+automatic monitoring of vulnerable people, for example those suffering from physical and/or
+cognitive conditions related to aging.
+
+
+
+What am I supposed to do if I decide to be involved? Participants are required to perform
+daily human activities. These can include for example:
+1. Walking
+2. Walking while moving objects from one side to another in the room
+3. Sitting on a chair
+4. Standing up from a chair
+5. Kneeling or bending down to pick up an object from the floor
+6. Kneeling or bending down to tie shoelaces
+7. Pouring and drinking a glass of water
+8. Pretending to answer a call on a mobile phone
+9. Washing hands
+10. Eating from a plate
+Depending on the experiment design, we may ask you to repeat the actions mentioned above
+several times individually, typically 3 times each, or to perform sequences of different actions (for
+example standing up from a chair, walking, then pouring and drinking a glass of water, and walk
+back to the chair to sit).
+Members of the team will be present near you in the room to provide information, help, and
+support as needed while performing the activities and assist in case of any inconvenience.
+We expect the total duration of the experiment to be between 30 minutes and one hour. You will
+not perform activities all the time, and you can take any break you need and withdraw from the
+experiment at any time if you wish to do so.
+Only if you are performing the experiments in our laboratory at the University of Glasgow, you
+may be asked to perform other two types of activities
+11. Simulating a trip event followed by a fall
+12. Crouching down pretending to look for something under a piece of furniture and coming
+back up
+
+
+
+Tell me more about the simulated fall at the University of Glasgow. You will be asked to
+simulate a tripping event followed by a fall on a soft gym mat provided. The fall will not be caused
+by external factors in the environment or triggered by members of the team, and you can perform
+the action in your own manner and speed. You may think of simulating to lose balance and
+leaning forward to land on the mat with your hands, or simulating to lock one foot with another
+and lean forward. The soft mat provided is large enough for participants to fall onto this (sizes
+
+approximately 200x60x12cm), with adequate width and thickness to prevent any injuries. Table
+and chairs in the room will be positioned in order not to be a hazard while performing the
+activities. Two members of the team will be always present in the room, about three or four steps
+away from you during the experiments to intervene and help in case of any problem – they can
+help you stand back up if you need to and assist in case of any inconvenience.
+
+
+Do I have to take part and is there any risk? Your participation to this study is fully voluntary,
+and you may withdraw at any time from this study, without giving any reason. We expect the
+activities mentioned above to be fairly innocuous to perform and not related to any specific risk.
+You can refuse to perform any of the activities mentioned above if you feel uncomfortable.
+If you have experienced serious previous fractures, you may want to consider whether not
+performing some of the proposed activities, such as the simulated fall; feel free to discuss with
+the researchers any concern on this matter.
+
+
+
+What sensors will be used? Are they dangerous? In the experiments you may be asked to
+wear a small 6x4x2cm sensor (X-IMU brand) on a wristband or in your pocket, and there will be
+radar sensors working at different frequencies recording at a distance of about 1 to 5-6 m from
+you, depending on the size of the room. Both sensors are not expected to cause any harm or
+discomfort, or pose any risk to your health.
+
+
+
+What data will be stored about you? We will ask you to provide your age to estimate the
+average age across all participants, but all the data will be stored in an anonymised manner and
+your name or individual age will not be disclosed in any academic publications or other
+dissemination material arising from this study.
+
+
+
+Who do I contact to know more about this study and its results, or if I have a complaint
+about any aspect of this study? You may contact the PhD students conducting this experiment
+(Haobo Li h.li.4@research.gla.ac.uk and Aman Shrestha a.shrestha.1@research,gla.ac.uk), and
+the academic staff (Dr Syed Aziz Shah, Syed.A.Shah@glasgow.ac.uk, and Dr Francesco
+Fioranelli, 01413304301, francesco.fioranelli@glasgow.ac.uk).
+
+

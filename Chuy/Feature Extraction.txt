@@ -1,0 +1,119 @@
+Feature Extraction
+Known values
+fc = 5.8GH z
+B = 400M H z
+
+chirp duration T = 1ms
+c
+
+Range of the person. It may be known via FFT over fast-time (i.e. within one chirp) to get
+beat frequency, then map frequency bin → range.
+Radial velocity. Via FFT over slow-time (across chirps) at a fixed range bin to get Doppler
+frequency, then map frequency bin → velocity.
+Direction (toward/away). From the sign of the Doppler (i.e. positive vs. negative
+frequency) in the range-Doppler map.
+Micro-Doppler features. Fine Doppler variations from limbs and torso, extracted from timefrequency representation (STFT / spectrogram / S-method) of the complex signal for one or
+several range bins.
+Micro-Doppler-based activity features. Cadence, stride frequency, gait simmetry, torso
+vs. limb Doppler spread, etc. used for human activity recognition and fall detection.
+Basic FMCW formulas for the radar.
+Chirp slope
+11
+
+S = B/Tc = 400M H z/1ms = 4 × 10
+
+H z/s
+
+Range resolution
+ΔR ≈ c/(2B). With B = 400M hz, ΔR ≈ 0.375m.
+Beat frequency vs. range
+fb =
+
+2SR
+c
+
+cfb
+
+⇒ R =
+
+2S
+
+where c is the speed of light and R is the target range
+Radial velocity from Doppler (across chirps):
+Doppler frequency f is related to radial velocity v by
+D
+
+fd =
+
+2vr
+λ
+
+⇒ vr =
+
+r
+
+fDλ
+2
+
+where λ = c/f
+In practical FMCW processing, you obtain a range-Doppler map (2D FFT) where axes
+already correspond to discretized range bins and Doppler bins.
+c
+
+Data Preparation
+1. Organize data into frames
+Decide a frame length of N chirps (v.gr. 128, 256)
+c
+
+For each frame, you have N chirps × N fast-time samples.
+c
+
+2. Calculate Range FFT (fast-time)
+For each chirp:
+
+s
+
+Apply window (e.g. Hahn) along fast-time samples.
+Compute 1D FFT → complex spectrum vs. beat frequency.
+Stack the FFT outputs for N chirps → matrix RangeF F T chirp, range_bin.
+c
+
+Convert frequency axis to range using R = cf /(2S)
+b
+
+3. Doppler FFT (slow-time)
+For each range bin:
+Take the sequence over chirps RangeF F T , r.
+Apply window over slow-time (chirp index).
+Compute 1D FFT → Doppler spectrum for that range bin.
+This gives a 2D range-Doppler map
+Map Doppler bins to velocity via v =
+to approach / retreat.
+r
+
+fDλ
+2
+
+Note that positive / negative bins correspond
+
+4. Target Extraction
+Detect peaks in the range-Doppler map (CFAR or simple threshold).
+For each detected person:
+Range = range bin x range resolution (plus exact interpolation if needed).
+Velocity = Doppler bin mapped via formula above.
+This gives you
+Distance of person from radar
+Radar velocity and direction (sign of v )
+r
+
+Micro-Doppler extraction pipeline
+To focus on micro-Doppler from human movement:
+1. Isolate the person's range bin(s)
+From the range profile (after range FFT but before Doppler FFT) find the range bin(s)
+corresponding to the torso (strongest reflection),
+Optionally include a few neighboring bins to capture extended body.
+2. Form a slow-time complex signal for that range.
+From each chirp, take the complex sample in the chosen range bin (or weighted sum over
+small range window)
+
+

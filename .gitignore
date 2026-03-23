@@ -1,1 +1,9 @@
+# Glasgow Dataset_848 archive (and split parts from rejoin_dataset.sh)
 Dataset_848.7z
+Dataset_848.7z.part*
+
+# Extracted INSHEP IQ files (large ASCII; one complex per line)
+*.dat
+
+# Training outputs, checkpoints, spectrogram cache
+runs/

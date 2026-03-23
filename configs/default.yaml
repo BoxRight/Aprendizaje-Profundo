@@ -1,0 +1,19 @@
+# Fixed preprocessing P — do not change mid-experiment without documenting.
+spectrogram:
+  range_bin_mode: fixed  # fixed | band | max_energy (max_energy = ablation only)
+  fixed_range_bin: 32
+  range_band: [28, 36]
+  fixed_num_chirps: 5000
+  stft_nperseg: 128
+  stft_noverlap: 96
+  stft_window: hann
+  spec_height: 128
+  spec_width: 128
+  log_eps: 1.0e-6
+
+training:
+  split_fractions: [0.8, 0.1, 0.1]
+  cnn_base: 48
+  weight_decay: 0.0001
+  # Optional BatchNorm on the GAP vector before the classifier (conv stack already uses BatchNorm2d).
+  use_head_bn: false

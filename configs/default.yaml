@@ -4,12 +4,12 @@ spectrogram:
   fixed_range_bin: 32
   range_band: [28, 36]
   fixed_num_chirps: 5000
-  stft_nperseg: 128
-  stft_noverlap: 96
-  stft_window: hann
-  spec_height: 128
-  spec_width: 128
-  log_eps: 1.0e-6
+  stft_nperseg: 128 #numero de muestras por segmento
+  stft_noverlap: 96 #solapamiento entre segmentos
+  stft_window: hann #ventana de STFT
+  spec_height: 128 #altura de la espectrograma
+  spec_width: 128 #ancho de la espectrograma
+  log_eps: 1.0e-6 #epsilon para evitar logaritmo de 0
 
 training:
   split_fractions: [0.8, 0.1, 0.1]

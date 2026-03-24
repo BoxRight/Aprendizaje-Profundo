@@ -26,29 +26,39 @@ def read_glasgow_dat(path: str) -> tuple[np.ndarray, dict[str, float]]:
     header_info : dict with fc_hz, tsweep_ms, tsweep_s, nts, bw_hz
     """
     with open(path, "r", encoding="utf-8", errors="replace") as f:
-        lines = [ln.strip() for ln in f.readlines() if ln.strip()]
+        header_lines: list[str] = []
+        for _ in range(4):
+            line = f.readline()
+            if not line:
+                raise ValueError(f"File too short (need 4 header lines + data): {path}")
+            s = line.strip()
+            if not s:
+                raise ValueError(f"Empty header line in {path}")
+            header_lines.append(s)
 
-    if len(lines) < 5:
-        raise ValueError(f"File too short (need header + data): {path}")
+        data_lines = [ln.strip() for ln in f.readlines() if ln.strip()]
 
-    fc = float(lines[0])
-    tsweep_ms = float(lines[1])
-    nts = int(round(float(lines[2])))
-    bw = float(lines[3])
+    if not data_lines:
+        raise ValueError(f"No IQ samples after header: {path}")
+
+    fc = float(header_lines[0])
+    tsweep_ms = float(header_lines[1])
+    nts = int(round(float(header_lines[2])))
+    bw = float(header_lines[3])
     if nts <= 0:
         raise ValueError(f"Invalid NTS in header: {nts}")
 
     try:
-        _parse_complex_line(lines[4])
+        _parse_complex_line(data_lines[0])
         use_complex_lines = True
     except ValueError:
         use_complex_lines = False
 
     if use_complex_lines:
-        iq_list = [_parse_complex_line(s) for s in lines[4:]]
+        iq_list = [_parse_complex_line(s) for s in data_lines]
         iq = np.array(iq_list, dtype=np.complex64)
     else:
-        raw = np.array([float(x) for x in lines[4:]], dtype=np.float64)
+        raw = np.array([float(x) for x in data_lines], dtype=np.float64)
         if len(raw) % 2 != 0:
             raise ValueError(
                 f"Expected even number of IQ floats after header, got {len(raw)} in {path}"

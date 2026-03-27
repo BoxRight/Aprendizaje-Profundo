@@ -92,6 +92,66 @@ python -m radar_cnn.evaluate \
 
 Interpretation: large **std** of per-subject macro-F1 or a few subjects near chance while others are near perfect suggests **heterogeneity** or **shortcut** behavior—review confusion matrices (especially fall vs high-motion classes) alongside these tables.
 
+## LSTM binary baseline (fall vs non-fall)
+
+Train LSTM on spectrogram-frame sequences (`T x F`) using subject-wise split:
+
+```bash
+python -m radar_cnn.train_lstm \
+  --data_root /path/to/extracted/dat/files \
+  --config configs/lstm_binary.yaml \
+  --output_dir runs/lstm_binary \
+  --cache_dir runs/cache
+```
+
+Evaluate:
+
+```bash
+python -m radar_cnn.evaluate_lstm \
+  --checkpoint runs/lstm_binary/best.pt \
+  --data_root /path/to/extracted/dat/files \
+  --split val \
+  --output_csv runs/lstm_binary/eval_val_per_subject.csv
+
+python -m radar_cnn.evaluate_lstm \
+  --checkpoint runs/lstm_binary/best.pt \
+  --data_root /path/to/extracted/dat/files \
+  --split test \
+  --output_csv runs/lstm_binary/eval_test_per_subject.csv
+```
+
+The LSTM run writes the same artifact family as CNN runs (`metrics.csv`, `metrics.png`, `run_config.json`, `train_meta.json`) and appends to `runs/*/experiments_log.csv`.
+
+## Binary fall CNN (same spectrogram as 6-class CNN)
+
+2-class `SmallRadarCNN` on the **same** `(1, H, W)` spectrogram—directly comparable **val_loss** / **macro-F1** to the LSTM binary baseline.
+
+```bash
+python -m radar_cnn.train_cnn_binary \
+  --data_root /path/to/extracted/dat/files \
+  --config configs/cnn_binary.yaml \
+  --output_dir runs/cnn_binary \
+  --cache_dir runs/cache
+```
+
+```bash
+python -m radar_cnn.evaluate_cnn_binary \
+  --checkpoint runs/cnn_binary/best.pt \
+  --data_root /path/to/extracted/dat/files \
+  --split test \
+  --output_csv runs/cnn_binary/eval_test_per_subject.csv
+```
+
+### Comparison protocol (CNN vs LSTM)
+
+1. Use the same `--data_root` and split seed.
+2. Train **binary** CNN (`radar_cnn.train_cnn_binary`) and LSTM (`radar_cnn.train_lstm`) for fair fall detection; keep 6-class CNN (`radar_cnn.train`) when you need all activities.
+3. Compare on **test**:
+   - macro-F1
+   - fall F1 (LSTM evaluator prints this explicitly)
+   - confusion matrix
+   - per-subject mean/std from exported CSVs
+
 ## Leave-one-subject-out (optional, expensive)
 
 ```bash
@@ -138,7 +198,12 @@ python -m radar_cnn.train \
 | `splits.py` | Discover files, subject-wise split |
 | `dataset.py` | PyTorch dataset + train statistics |
 | `model.py` | `SmallRadarCNN` |
+| `model_lstm.py` | `LSTMBinaryClassifier` |
 | `train.py` | Weighted CE, augmentation |
+| `train_cnn_binary.py` | Binary fall CNN training |
+| `train_lstm.py` | Binary fall/non-fall LSTM training |
 | `evaluate.py` | Metrics + per-subject table |
+| `evaluate_cnn_binary.py` | Binary CNN metrics + per-subject table |
+| `evaluate_lstm.py` | Binary LSTM metrics + per-subject table |
 | `loso.py` | Leave-one-subject-out |
 | `controls.py` | Negative-control baselines |

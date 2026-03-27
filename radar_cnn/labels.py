@@ -42,3 +42,10 @@ def activity_to_label(activity: int) -> int:
     if activity < 1 or activity > 6:
         raise ValueError(activity)
     return activity - 1
+
+
+def activity_to_binary_label(activity: int) -> int:
+    """Binary label: fall=1 (A06), non-fall=0 (A01..A05)."""
+    if activity < 1 or activity > 6:
+        raise ValueError(activity)
+    return 1 if activity == 6 else 0

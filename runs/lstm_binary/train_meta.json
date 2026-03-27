@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-03-27T17:26:03Z",
+  "git_commit": "cd18895",
+  "model_type": "lstm_binary",
+  "mean": -2.395190708115377,
+  "std": 1.2103625299354808,
+  "train_files": 1398,
+  "val_files": 193,
+  "test_files": 163,
+  "shuffle_labels": false,
+  "best_metric": "val_macro_f1",
+  "patience": 8,
+  "epochs_ran": 19,
+  "early_stopped": true,
+  "best_epoch": 11,
+  "best_val_macro_f1": 0.9373376623376624,
+  "best_val_loss": null,
+  "metrics_csv": "runs/lstm_binary/metrics.csv",
+  "metrics_png": "runs/lstm_binary/metrics.png"
+}

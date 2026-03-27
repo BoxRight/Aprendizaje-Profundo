@@ -1,0 +1,65 @@
+{
+  "timestamp_utc": "2026-03-27T17:26:03Z",
+  "git_commit": "cd18895",
+  "output_dir": "runs/lstm_binary",
+  "config_path": "configs/lstm_binary.yaml",
+  "cli_args": {
+    "data_root": ".",
+    "config": "configs/lstm_binary.yaml",
+    "output_dir": "runs/lstm_binary",
+    "seed": 42,
+    "batch_size": 16,
+    "epochs": 40,
+    "lr": 0.001,
+    "num_workers": 0,
+    "cache_dir": "runs/cache",
+    "stats_max_files": null,
+    "verbose": false,
+    "shuffle_labels": false,
+    "best_metric": "val_macro_f1",
+    "patience": 8
+  },
+  "config_spectrogram": {
+    "range_bin_mode": "band",
+    "fixed_range_bin": 32,
+    "range_band": [
+      28,
+      36
+    ],
+    "fixed_num_chirps": 5000,
+    "stft_nperseg": 128,
+    "stft_noverlap": 96,
+    "stft_window": "hann",
+    "spec_height": 128,
+    "spec_width": 128,
+    "log_eps": 1e-06
+  },
+  "config_sequence": {
+    "seq_len": 16,
+    "frame_reduce": "mean"
+  },
+  "config_lstm": {
+    "hidden_size": 128,
+    "num_layers": 1,
+    "dropout": 0.0,
+    "bidirectional": false
+  },
+  "config_training": {
+    "split_fractions": [
+      0.8,
+      0.1,
+      0.1
+    ],
+    "weight_decay": 0.0001,
+    "fall_loss_multiplier": 2.0
+  },
+  "resolved": {
+    "seq_len": 16,
+    "frame_reduce": "mean",
+    "hidden_size": 128,
+    "num_layers": 1,
+    "dropout": 0.0,
+    "bidirectional": false,
+    "fall_loss_multiplier": 2.0
+  }
+}

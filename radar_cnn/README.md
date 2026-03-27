@@ -117,6 +117,17 @@ High accuracy on **subject** or **chirp length** alone indicates strong non-phys
 
 If `--cache_dir` is set, spectrograms are written under `{cache_dir}/{split_name}/`. Populate cache **after** splits are fixed (this implementation caches per split name).
 
+run with
+
+python -m radar_cnn.train \
+  --data_root . \
+  --config configs/default.yaml \
+  --output_dir runs/exp1 \
+  --cache_dir runs/cache \
+  --epochs 40 \
+  --batch_size 8 \
+  --lr 1e-3
+
 ## Module map
 
 | Module | Role |

@@ -5,5 +5,3 @@ Dataset_848.7z.part*
 # Extracted INSHEP IQ files (large ASCII; one complex per line)
 *.dat
 
-# Training outputs, checkpoints, spectrogram cache
-runs/

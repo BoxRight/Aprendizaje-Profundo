@@ -8,24 +8,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument(
-        "--csv",
-        type=str,
-        default="runs/exp1/metrics.csv",
-        help="Path to metrics.csv",
-    )
-    ap.add_argument(
-        "--out",
-        type=str,
-        default=None,
-        help="Output PNG path (default: same dir as csv, name metrics.png)",
-    )
-    ap.add_argument("--dpi", type=int, default=150)
-    args = ap.parse_args()
-
-    csv_path = Path(args.csv)
+def plot_metrics_csv(csv_path: Path, out_path: Path | None = None, dpi: int = 150) -> Path:
     if not csv_path.is_file():
         raise SystemExit(f"Not found: {csv_path}")
 
@@ -34,7 +17,7 @@ def main() -> None:
         if col not in df.columns:
             raise SystemExit(f"CSV missing column {col!r}: {list(df.columns)}")
 
-    out_path = Path(args.out) if args.out else csv_path.parent / "metrics.png"
+    out_path = out_path or (csv_path.parent / "metrics.png")
 
     import matplotlib.pyplot as plt
 
@@ -54,8 +37,34 @@ def main() -> None:
     ax2.grid(True, alpha=0.3)
 
     fig.tight_layout()
-    fig.savefig(out_path, dpi=args.dpi)
+    fig.savefig(out_path, dpi=dpi)
     plt.close()
+    return out_path
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--csv",
+        type=str,
+        default="runs/exp1/metrics.csv",
+        help="Path to metrics.csv",
+    )
+    ap.add_argument(
+        "--out",
+        type=str,
+        default=None,
+        help="Output PNG path (default: same dir as csv, name metrics.png)",
+    )
+    ap.add_argument("--dpi", type=int, default=150)
+    args = ap.parse_args()
+
+    csv_path = Path(args.csv)
+    out_path = plot_metrics_csv(
+        csv_path=csv_path,
+        out_path=Path(args.out) if args.out else None,
+        dpi=args.dpi,
+    )
     print(f"Wrote {out_path}")
 
 

@@ -43,6 +43,8 @@ python -m radar_cnn.train \
   --cache_dir runs/exp1/cache
 ```
 
+If `--output_dir` already has a previous run (`best.pt`, `metrics.csv`, etc.), training auto-creates a unique subfolder like `run_YYYY-MM-DD_HH-MM-SS_seed42` so past runs are never overwritten.
+
 **Best checkpoint:** `runs/exp1/best.pt` is saved when **`val_macro_f1`** on the validation set improves (default). Use `--best_metric val_loss` to restore loss-based selection.
 
 **Early stopping:** default `--patience 8` stops training if `best_metric` does not improve for 8 epochs. Use `--patience 0` to always run the full `--epochs` (previous behavior).
@@ -52,6 +54,11 @@ python -m radar_cnn.train \
 **Batch normalization:** convolutional blocks already use `BatchNorm2d`. Optional `training.use_head_bn: true` in the YAML adds `BatchNorm1d` on the GAP feature vector before the linear classifier (can help with very small batches).
 
 Run metadata (shuffle mode, patience, epochs run, early stop) is written to **`runs/exp1/train_meta.json`**.
+Each run also writes:
+
+- **`run_config.json`** in the run folder (CLI args, YAML config snapshot, resolved spectrogram/training hyperparameters).
+- **`metrics.png`** automatically at train end (from `metrics.csv`).
+- **`runs/experiments_log.csv`** (one appended row per run for cross-run comparison: timestamp, commit, split sizes, key hyperparameters, best metrics).
 
 Checkpoint payload includes `spec_cfg`, `mean`, `std`, `seed`, `split_fractions`, `cnn_base`, `use_head_bn`, `best_metric`, `shuffle_labels`.
 

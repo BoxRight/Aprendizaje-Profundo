@@ -1,0 +1,13 @@
+{
+  "mean": -0.03818520515602887,
+  "std": 1.2704797113478299,
+  "train_files": 1398,
+  "val_files": 193,
+  "test_files": 163,
+  "shuffle_labels": false,
+  "best_metric": "val_macro_f1",
+  "patience": 20,
+  "epochs_ran": 40,
+  "early_stopped": false,
+  "use_head_bn": false
+}

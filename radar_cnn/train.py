@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import json
 import random
+import subprocess
 from collections import Counter
 from pathlib import Path
 
@@ -21,6 +23,7 @@ from radar_cnn.config import load_yaml, spectrogram_from_dict
 from radar_cnn.dataset import RadarSpectrogramDataset, compute_train_statistics
 from radar_cnn.labels import activity_to_label, parse_filename
 from radar_cnn.model import SmallRadarCNN, count_parameters
+from radar_cnn.plot_metrics import plot_metrics_csv
 from radar_cnn.splits import (
     assert_disjoint_subject_splits,
     discover_dat_files,
@@ -116,6 +119,79 @@ def _metric_improved(
     if best_metric == "val_macro_f1":
         return macro_f1 > best_f1
     return val_loss < best_val_loss
+
+
+def _git_commit_hash() -> str | None:
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        return out or None
+    except Exception:
+        return None
+
+
+def _append_experiments_log(log_path: Path, row: dict[str, object]) -> None:
+    fieldnames = [
+        "timestamp_utc",
+        "run_dir",
+        "git_commit",
+        "config_path",
+        "seed",
+        "batch_size",
+        "epochs_requested",
+        "epochs_ran",
+        "lr",
+        "best_metric",
+        "patience",
+        "shuffle_labels",
+        "range_bin_mode",
+        "range_band",
+        "stft_nperseg",
+        "stft_noverlap",
+        "train_files",
+        "val_files",
+        "test_files",
+        "best_epoch",
+        "best_val_macro_f1",
+        "best_val_loss",
+        "early_stopped",
+        "metrics_csv",
+        "metrics_png",
+    ]
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not log_path.exists()
+    with open(log_path, "a", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        if write_header:
+            w.writeheader()
+        w.writerow({k: row.get(k, "") for k in fieldnames})
+
+
+def _ensure_unique_run_dir(base_output_dir: Path, seed: int, timestamp_utc: str) -> Path:
+    """
+    Avoid overwriting previous runs: if base dir already contains run artifacts,
+    create a timestamped child directory for the new run.
+    """
+    run_markers = {"best.pt", "metrics.csv", "train_meta.json", "run_config.json"}
+    if not base_output_dir.exists():
+        return base_output_dir
+    if not base_output_dir.is_dir():
+        raise SystemExit(f"output_dir is not a directory: {base_output_dir}")
+
+    has_run_artifacts = any((base_output_dir / m).exists() for m in run_markers)
+    if not has_run_artifacts:
+        return base_output_dir
+
+    ts = timestamp_utc.replace(":", "-").replace("T", "_").replace("Z", "")
+    candidate = base_output_dir / f"run_{ts}_seed{seed}"
+    suffix = 1
+    while candidate.exists():
+        suffix += 1
+        candidate = base_output_dir / f"run_{ts}_seed{seed}_{suffix}"
+    return candidate
 
 
 def main() -> None:
@@ -264,8 +340,11 @@ def main() -> None:
         num_workers=args.num_workers,
     )
 
-    out_dir = Path(args.output_dir)
+    timestamp_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    git_commit = _git_commit_hash()
+    out_dir = _ensure_unique_run_dir(Path(args.output_dir), args.seed, timestamp_utc)
     out_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Run directory: {out_dir}", flush=True)
     best_path = out_dir / "best.pt"
     metrics_csv = out_dir / "metrics.csv"
     with open(metrics_csv, "w", newline="", encoding="utf-8") as f:
@@ -281,6 +360,7 @@ def main() -> None:
 
     best_f1 = float("-inf")
     best_val_loss = float("inf")
+    best_epoch = 0
     no_improve = 0
     last_epoch = 0
     early_stopped = False
@@ -311,6 +391,7 @@ def main() -> None:
                 best_f1 = macro_f1
             else:
                 best_val_loss = val_loss
+            best_epoch = epoch + 1
             no_improve = 0
             torch.save(
                 {
@@ -343,9 +424,45 @@ def main() -> None:
             break
 
     print("Saved:", best_path)
+    metrics_png = out_dir / "metrics.png"
+    try:
+        written_plot = plot_metrics_csv(metrics_csv, metrics_png)
+        print(f"Metrics plot: {written_plot}", flush=True)
+    except Exception as e:
+        print(f"Metrics plot failed: {e}", flush=True)
+
+    run_config = {
+        "timestamp_utc": timestamp_utc,
+        "git_commit": git_commit,
+        "output_dir": str(out_dir),
+        "config_path": str(args.config),
+        "cli_args": vars(args),
+        "config_spectrogram": cfg.get("spectrogram", {}),
+        "config_training": train_cfg,
+        "resolved": {
+            "range_bin_mode": spec_cfg.range_bin_mode,
+            "fixed_range_bin": spec_cfg.fixed_range_bin,
+            "range_band": list(spec_cfg.range_band),
+            "fixed_num_chirps": spec_cfg.fixed_num_chirps,
+            "stft_nperseg": spec_cfg.stft_nperseg,
+            "stft_noverlap": spec_cfg.stft_noverlap,
+            "stft_window": spec_cfg.stft_window,
+            "spec_height": spec_cfg.spec_height,
+            "spec_width": spec_cfg.spec_width,
+            "cnn_base": int(train_cfg.get("cnn_base", 48)),
+            "use_head_bn": use_head_bn,
+            "best_metric": args.best_metric,
+            "patience": args.patience,
+        },
+    }
+    with open(out_dir / "run_config.json", "w", encoding="utf-8") as f:
+        json.dump(run_config, f, indent=2)
+
     with open(out_dir / "train_meta.json", "w", encoding="utf-8") as f:
         json.dump(
             {
+                "timestamp_utc": timestamp_utc,
+                "git_commit": git_commit,
                 "mean": mean,
                 "std": std,
                 "train_files": len(train_paths),
@@ -357,10 +474,49 @@ def main() -> None:
                 "epochs_ran": last_epoch,
                 "early_stopped": early_stopped,
                 "use_head_bn": use_head_bn,
+                "best_epoch": best_epoch,
+                "best_val_macro_f1": None if best_f1 == float("-inf") else best_f1,
+                "best_val_loss": None if best_val_loss == float("inf") else best_val_loss,
+                "metrics_csv": str(metrics_csv),
+                "metrics_png": str(metrics_png),
             },
             f,
             indent=2,
         )
+
+    experiments_log = out_dir.parent / "experiments_log.csv"
+    _append_experiments_log(
+        experiments_log,
+        {
+            "timestamp_utc": timestamp_utc,
+            "run_dir": str(out_dir),
+            "git_commit": git_commit or "",
+            "config_path": str(args.config),
+            "seed": args.seed,
+            "batch_size": args.batch_size,
+            "epochs_requested": args.epochs,
+            "epochs_ran": last_epoch,
+            "lr": args.lr,
+            "best_metric": args.best_metric,
+            "patience": args.patience,
+            "shuffle_labels": args.shuffle_labels,
+            "range_bin_mode": spec_cfg.range_bin_mode,
+            "range_band": str(tuple(spec_cfg.range_band)),
+            "stft_nperseg": spec_cfg.stft_nperseg,
+            "stft_noverlap": spec_cfg.stft_noverlap,
+            "train_files": len(train_paths),
+            "val_files": len(val_paths),
+            "test_files": len(test_paths),
+            "best_epoch": best_epoch,
+            "best_val_macro_f1": "" if best_f1 == float("-inf") else f"{best_f1:.6f}",
+            "best_val_loss": "" if best_val_loss == float("inf") else f"{best_val_loss:.6f}",
+            "early_stopped": early_stopped,
+            "metrics_csv": str(metrics_csv),
+            "metrics_png": str(metrics_png),
+        },
+    )
+    print(f"Run config: {out_dir / 'run_config.json'}", flush=True)
+    print(f"Experiments log: {experiments_log}", flush=True)
 
 
 if __name__ == "__main__":

@@ -183,9 +183,6 @@ def train(args: argparse.Namespace) -> None:
             save_best_only=True, mode="max", verbose=1),
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss", factor=0.5, patience=4, min_lr=1e-6),
-        tf.keras.callbacks.EarlyStopping(
-            monitor="val_accuracy", patience=12,
-            restore_best_weights=True, mode="max"),
     ]
 
     history = model.fit(

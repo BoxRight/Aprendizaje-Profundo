@@ -1,0 +1,305 @@
+2026-04-30 22:37:48.534161: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1777610272.708736  502581 gpu_device.cc:2020] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 2102 MB memory:  -> device: 0, name: NVIDIA GeForce RTX 2050, pci bus id: 0000:01:00.0, compute capability: 8.6
+2026-04-30 22:37:52.710934: W external/local_xla/xla/tsl/framework/cpu_allocator_impl.cc:84] Allocation of 215613440 exceeds 10% of free system memory.
+2026-04-30 22:37:52.902680: W external/local_xla/xla/tsl/framework/cpu_allocator_impl.cc:84] Allocation of 215613440 exceeds 10% of free system memory.
+2026-04-30 22:37:53.998496: W external/local_xla/xla/tsl/framework/cpu_allocator_impl.cc:84] Allocation of 29622272 exceeds 10% of free system memory.
+2026-04-30 22:37:54.027172: W external/local_xla/xla/tsl/framework/cpu_allocator_impl.cc:84] Allocation of 29622272 exceeds 10% of free system memory.
+2026-04-30 22:37:54.069424: W external/local_xla/xla/tsl/framework/cpu_allocator_impl.cc:84] Allocation of 25296896 exceeds 10% of free system memory.
+Loading dataset from processed/full_dataset.npz ...
+  X=(2064, 128, 256, 1)  y=(2064,)  unique_persons=72
+
+Split summary (Explicit split):
+  train   :  1645 samples /  58 persons
+  val     :   226 samples /   7 persons
+  test    :   193 samples /   7 persons
+Model: "radar_cnn"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ spectrogram (InputLayer)        │ (None, 128, 256, 1)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_conv1 (Conv2D)               │ (None, 128, 256, 32)   │           320 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_bn1 (BatchNormalization)     │ (None, 128, 256, 32)   │           128 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_relu1 (ReLU)                 │ (None, 128, 256, 32)   │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_conv2 (Conv2D)               │ (None, 128, 256, 32)   │         9,248 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_bn2 (BatchNormalization)     │ (None, 128, 256, 32)   │           128 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_relu2 (ReLU)                 │ (None, 128, 256, 32)   │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b1_pool (MaxPooling2D)          │ (None, 64, 128, 32)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_conv1 (Conv2D)               │ (None, 64, 128, 64)    │        18,496 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_bn1 (BatchNormalization)     │ (None, 64, 128, 64)    │           256 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_relu1 (ReLU)                 │ (None, 64, 128, 64)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_conv2 (Conv2D)               │ (None, 64, 128, 64)    │        36,928 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_bn2 (BatchNormalization)     │ (None, 64, 128, 64)    │           256 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_relu2 (ReLU)                 │ (None, 64, 128, 64)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b2_pool (MaxPooling2D)          │ (None, 32, 64, 64)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_conv1 (Conv2D)               │ (None, 32, 64, 128)    │        73,856 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_bn1 (BatchNormalization)     │ (None, 32, 64, 128)    │           512 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_relu1 (ReLU)                 │ (None, 32, 64, 128)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_conv2 (Conv2D)               │ (None, 32, 64, 128)    │       147,584 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_bn2 (BatchNormalization)     │ (None, 32, 64, 128)    │           512 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_relu2 (ReLU)                 │ (None, 32, 64, 128)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b3_pool (MaxPooling2D)          │ (None, 16, 32, 128)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_conv1 (Conv2D)               │ (None, 16, 32, 128)    │       147,584 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_bn1 (BatchNormalization)     │ (None, 16, 32, 128)    │           512 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_relu1 (ReLU)                 │ (None, 16, 32, 128)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_conv2 (Conv2D)               │ (None, 16, 32, 128)    │       147,584 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_bn2 (BatchNormalization)     │ (None, 16, 32, 128)    │           512 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_relu2 (ReLU)                 │ (None, 16, 32, 128)    │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ b4_pool (MaxPooling2D)          │ (None, 8, 16, 128)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ gap (GlobalAveragePooling2D)    │ (None, 128)            │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ fc1 (Dense)                     │ (None, 128)            │        16,512 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (Dropout)               │ (None, 128)            │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ predictions (Dense)             │ (None, 6)              │           774 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 601,702 (2.30 MB)
+ Trainable params: 600,294 (2.29 MB)
+ Non-trainable params: 1,408 (5.50 KB)
+Epoch 1/40
+2026-04-30 22:37:57.802710: I external/local_xla/xla/service/service.cc:163] XLA service 0x451cd650 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2026-04-30 22:37:57.802758: I external/local_xla/xla/service/service.cc:171]   StreamExecutor device (0): NVIDIA GeForce RTX 2050, Compute Capability 8.6
+2026-04-30 22:37:57.907263: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:269] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2026-04-30 22:37:58.749257: I external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:473] Loaded cuDNN version 92101
+2026-04-30 22:37:58.969464: I external/local_xla/xla/service/gpu/autotuning/dot_search_space.cc:208] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs? Working around this by using the full hints set instead.
+2026-04-30 22:37:58.969698: I external/local_xla/xla/service/gpu/autotuning/dot_search_space.cc:208] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs? Working around this by using the full hints set instead.
+2026-04-30 22:37:58.969726: I external/local_xla/xla/service/gpu/autotuning/dot_search_space.cc:208] All configs were filtered out because none of them sufficiently match the hints. Maybe the hints set does not contain a good representative set of valid configs? Working around this by using the full hints set instead.
+2026-04-30 22:37:59.970562: I external/local_xla/xla/stream_executor/cuda/subprocess_compilation.cc:346] ptxas warning : Registers are spilled to local memory in function 'gemm_fusion_dot_2923', 28 bytes spill stores, 28 bytes spill loads
+
+2026-04-30 22:38:00.444867: I external/local_xla/xla/stream_executor/cuda/subprocess_compilation.cc:346] ptxas warning : Registers are spilled to local memory in function 'gemm_fusion_dot_3837', 520 bytes spill stores, 520 bytes spill loads
+
+2026-04-30 22:38:03.589805: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 3.04GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:04.413038: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.55GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:16.002140: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 1.59GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:17.579377: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.09GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:19.429317: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.08GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+I0000 00:00:1777610303.117258  502662 device_compiler.h:196] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2026-04-30 22:38:33.823264: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 1.23GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:34.126507: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.44GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:34.288835: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 1.13GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:34.555969: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 2.25GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:40.120694: W external/local_xla/xla/tsl/framework/bfc_allocator.cc:310] Allocator (GPU_0_bfc) ran out of memory trying to allocate 1.05GiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+2026-04-30 22:38:45.292928: I external/local_xla/xla/stream_executor/cuda/subprocess_compilation.cc:346] ptxas warning : Registers are spilled to local memory in function 'gemm_fusion_dot_389', 20 bytes spill stores, 20 bytes spill loads
+
+
+Epoch 1: val_accuracy improved from None to 0.14602, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 1: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 54s - 1s/step - accuracy: 0.5605 - loss: 1.1802 - val_accuracy: 0.1460 - val_loss: 1.8955 - learning_rate: 0.0010
+Epoch 2/40
+
+Epoch 2: val_accuracy did not improve from 0.14602
+52/52 - 9s - 171ms/step - accuracy: 0.7520 - loss: 0.7591 - val_accuracy: 0.1460 - val_loss: 1.9268 - learning_rate: 0.0010
+Epoch 3/40
+
+Epoch 3: val_accuracy did not improve from 0.14602
+52/52 - 9s - 171ms/step - accuracy: 0.7982 - loss: 0.6183 - val_accuracy: 0.1460 - val_loss: 1.9396 - learning_rate: 0.0010
+Epoch 4/40
+
+Epoch 4: val_accuracy did not improve from 0.14602
+52/52 - 9s - 166ms/step - accuracy: 0.8261 - loss: 0.5617 - val_accuracy: 0.1460 - val_loss: 1.8844 - learning_rate: 0.0010
+Epoch 5/40
+
+Epoch 5: val_accuracy did not improve from 0.14602
+52/52 - 9s - 170ms/step - accuracy: 0.8292 - loss: 0.5276 - val_accuracy: 0.1460 - val_loss: 2.0286 - learning_rate: 0.0010
+Epoch 6/40
+
+Epoch 6: val_accuracy did not improve from 0.14602
+52/52 - 9s - 171ms/step - accuracy: 0.8535 - loss: 0.4922 - val_accuracy: 0.1460 - val_loss: 2.4718 - learning_rate: 0.0010
+Epoch 7/40
+
+Epoch 7: val_accuracy improved from 0.14602 to 0.44690, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 7: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.8657 - loss: 0.4397 - val_accuracy: 0.4469 - val_loss: 1.5471 - learning_rate: 0.0010
+Epoch 8/40
+
+Epoch 8: val_accuracy did not improve from 0.44690
+52/52 - 9s - 171ms/step - accuracy: 0.8626 - loss: 0.4514 - val_accuracy: 0.4469 - val_loss: 1.3528 - learning_rate: 0.0010
+Epoch 9/40
+
+Epoch 9: val_accuracy improved from 0.44690 to 0.74779, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 9: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.8675 - loss: 0.4319 - val_accuracy: 0.7478 - val_loss: 0.8386 - learning_rate: 0.0010
+Epoch 10/40
+
+Epoch 10: val_accuracy improved from 0.74779 to 0.80973, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 10: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 172ms/step - accuracy: 0.8657 - loss: 0.4406 - val_accuracy: 0.8097 - val_loss: 0.6637 - learning_rate: 0.0010
+Epoch 11/40
+
+Epoch 11: val_accuracy improved from 0.80973 to 0.86726, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 11: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.8839 - loss: 0.4030 - val_accuracy: 0.8673 - val_loss: 0.5235 - learning_rate: 0.0010
+Epoch 12/40
+
+Epoch 12: val_accuracy did not improve from 0.86726
+52/52 - 9s - 171ms/step - accuracy: 0.8845 - loss: 0.3931 - val_accuracy: 0.7035 - val_loss: 0.8986 - learning_rate: 0.0010
+Epoch 13/40
+
+Epoch 13: val_accuracy did not improve from 0.86726
+52/52 - 9s - 171ms/step - accuracy: 0.8693 - loss: 0.3948 - val_accuracy: 0.7876 - val_loss: 0.5887 - learning_rate: 0.0010
+Epoch 14/40
+
+Epoch 14: val_accuracy did not improve from 0.86726
+52/52 - 9s - 171ms/step - accuracy: 0.9064 - loss: 0.3505 - val_accuracy: 0.7301 - val_loss: 1.0343 - learning_rate: 0.0010
+Epoch 15/40
+
+Epoch 15: val_accuracy did not improve from 0.86726
+52/52 - 9s - 171ms/step - accuracy: 0.8930 - loss: 0.3590 - val_accuracy: 0.8540 - val_loss: 0.7609 - learning_rate: 0.0010
+Epoch 16/40
+
+Epoch 16: val_accuracy improved from 0.86726 to 0.88053, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 16: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 172ms/step - accuracy: 0.9021 - loss: 0.3276 - val_accuracy: 0.8805 - val_loss: 0.5215 - learning_rate: 5.0000e-04
+Epoch 17/40
+
+Epoch 17: val_accuracy improved from 0.88053 to 0.88496, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 17: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.9112 - loss: 0.3148 - val_accuracy: 0.8850 - val_loss: 0.3519 - learning_rate: 5.0000e-04
+Epoch 18/40
+
+Epoch 18: val_accuracy did not improve from 0.88496
+52/52 - 9s - 171ms/step - accuracy: 0.9179 - loss: 0.2966 - val_accuracy: 0.7212 - val_loss: 1.6161 - learning_rate: 5.0000e-04
+Epoch 19/40
+
+Epoch 19: val_accuracy did not improve from 0.88496
+52/52 - 9s - 171ms/step - accuracy: 0.9173 - loss: 0.3016 - val_accuracy: 0.8407 - val_loss: 0.6340 - learning_rate: 5.0000e-04
+Epoch 20/40
+
+Epoch 20: val_accuracy did not improve from 0.88496
+52/52 - 9s - 170ms/step - accuracy: 0.9173 - loss: 0.2897 - val_accuracy: 0.8319 - val_loss: 0.6595 - learning_rate: 5.0000e-04
+Epoch 21/40
+
+Epoch 21: val_accuracy did not improve from 0.88496
+52/52 - 9s - 171ms/step - accuracy: 0.9155 - loss: 0.3101 - val_accuracy: 0.8761 - val_loss: 0.4302 - learning_rate: 5.0000e-04
+Epoch 22/40
+
+Epoch 22: val_accuracy improved from 0.88496 to 0.89381, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 22: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.9307 - loss: 0.2737 - val_accuracy: 0.8938 - val_loss: 0.4144 - learning_rate: 2.5000e-04
+Epoch 23/40
+
+Epoch 23: val_accuracy improved from 0.89381 to 0.89823, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 23: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.9325 - loss: 0.2475 - val_accuracy: 0.8982 - val_loss: 0.3438 - learning_rate: 2.5000e-04
+Epoch 24/40
+
+Epoch 24: val_accuracy improved from 0.89823 to 0.92035, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 24: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.9295 - loss: 0.2710 - val_accuracy: 0.9204 - val_loss: 0.3566 - learning_rate: 2.5000e-04
+Epoch 25/40
+
+Epoch 25: val_accuracy did not improve from 0.92035
+52/52 - 9s - 167ms/step - accuracy: 0.9337 - loss: 0.2618 - val_accuracy: 0.8938 - val_loss: 0.4133 - learning_rate: 2.5000e-04
+Epoch 26/40
+
+Epoch 26: val_accuracy did not improve from 0.92035
+52/52 - 9s - 171ms/step - accuracy: 0.9380 - loss: 0.2424 - val_accuracy: 0.8673 - val_loss: 0.4004 - learning_rate: 2.5000e-04
+Epoch 27/40
+
+Epoch 27: val_accuracy did not improve from 0.92035
+52/52 - 9s - 171ms/step - accuracy: 0.9362 - loss: 0.2400 - val_accuracy: 0.9027 - val_loss: 0.5154 - learning_rate: 2.5000e-04
+Epoch 28/40
+
+Epoch 28: val_accuracy did not improve from 0.92035
+52/52 - 9s - 171ms/step - accuracy: 0.9392 - loss: 0.2484 - val_accuracy: 0.9115 - val_loss: 0.3504 - learning_rate: 1.2500e-04
+Epoch 29/40
+
+Epoch 29: val_accuracy improved from 0.92035 to 0.92478, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 29: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 172ms/step - accuracy: 0.9447 - loss: 0.2239 - val_accuracy: 0.9248 - val_loss: 0.2986 - learning_rate: 1.2500e-04
+Epoch 30/40
+
+Epoch 30: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9483 - loss: 0.2209 - val_accuracy: 0.9248 - val_loss: 0.3540 - learning_rate: 1.2500e-04
+Epoch 31/40
+
+Epoch 31: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9538 - loss: 0.2211 - val_accuracy: 0.9248 - val_loss: 0.2854 - learning_rate: 1.2500e-04
+Epoch 32/40
+
+Epoch 32: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9435 - loss: 0.2259 - val_accuracy: 0.9248 - val_loss: 0.2852 - learning_rate: 1.2500e-04
+Epoch 33/40
+
+Epoch 33: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9483 - loss: 0.2047 - val_accuracy: 0.9204 - val_loss: 0.3157 - learning_rate: 1.2500e-04
+Epoch 34/40
+
+Epoch 34: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9495 - loss: 0.2135 - val_accuracy: 0.9204 - val_loss: 0.3062 - learning_rate: 1.2500e-04
+Epoch 35/40
+
+Epoch 35: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9568 - loss: 0.1964 - val_accuracy: 0.9115 - val_loss: 0.3102 - learning_rate: 1.2500e-04
+Epoch 36/40
+
+Epoch 36: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9532 - loss: 0.2040 - val_accuracy: 0.9159 - val_loss: 0.3635 - learning_rate: 1.2500e-04
+Epoch 37/40
+
+Epoch 37: val_accuracy did not improve from 0.92478
+52/52 - 9s - 171ms/step - accuracy: 0.9678 - loss: 0.1852 - val_accuracy: 0.9248 - val_loss: 0.3673 - learning_rate: 6.2500e-05
+Epoch 38/40
+
+Epoch 38: val_accuracy improved from 0.92478 to 0.92920, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 38: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 173ms/step - accuracy: 0.9635 - loss: 0.1875 - val_accuracy: 0.9292 - val_loss: 0.3084 - learning_rate: 6.2500e-05
+Epoch 39/40
+
+Epoch 39: val_accuracy improved from 0.92920 to 0.93363, saving model to models_explicit/best_model_explicit.keras
+
+Epoch 39: finished saving model to models_explicit/best_model_explicit.keras
+52/52 - 9s - 172ms/step - accuracy: 0.9556 - loss: 0.1961 - val_accuracy: 0.9336 - val_loss: 0.3041 - learning_rate: 6.2500e-05
+Epoch 40/40
+
+Epoch 40: val_accuracy did not improve from 0.93363
+52/52 - 9s - 171ms/step - accuracy: 0.9599 - loss: 0.1828 - val_accuracy: 0.9292 - val_loss: 0.3355 - learning_rate: 6.2500e-05
+
+Saved final model to models_explicit/radar_cnn_explicit.keras
+Best-val model saved to models_explicit/best_model_explicit.keras
+
+Validation accuracy: 0.9336   loss: 0.3041
+Test accuracy: 0.9430   loss: 0.3036

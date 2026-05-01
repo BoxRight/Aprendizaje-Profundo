@@ -4,22 +4,30 @@ train.py
 Train the radar-HAR CNN on the cached spectrogram dataset produced by
 ``preprocess.py``.
 
-The dataset is split by *person id* (not by sample) so that the test
-set contains subjects the network has never seen. Model weights, a
-training-curve plot and a confusion matrix are saved under ``models/``.
+The dataset is split into three disjoint subsets **by person id** so
+that no subject ever appears in more than one of the splits:
+
+* **train**     – used to fit the network.
+* **validation** – monitored during training (early stopping, LR
+  schedule, best-checkpoint selection).
+* **hold-out test** – completely reserved.  It is **never** passed to
+  ``model.fit`` and is only used for the final report.  The hold-out
+  spectrograms together with their labels and source filenames are
+  saved on disk so that the user can run the model against the same
+  reserved subset later (see ``evaluate.py``).
 
 Usage::
 
     python train.py
-    python train.py --epochs 50 --batch-size 32 --test-frac 0.2
+    python train.py --epochs 50 --val-frac 0.15 --holdout-frac 0.2
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -33,37 +41,69 @@ def _load_dataset(path: str | Path):
     X = data["X"].astype(np.float32)
     y = data["y"].astype(np.int64)
     persons = data["persons"].astype(np.int32)
+    if "filenames" in data.files:
+        filenames = np.asarray(data["filenames"])
+    else:
+        filenames = np.asarray([f"sample_{i}" for i in range(len(y))])
     if X.ndim == 3:
         X = X[..., np.newaxis]  # add channel dim
-    return X, y, persons
+    return X, y, persons, filenames
 
 
 def _split_by_person(persons: np.ndarray,
                      y: np.ndarray,
-                     test_frac: float,
-                     seed: int) -> tuple[np.ndarray, np.ndarray]:
-    """Return boolean masks ``(train_mask, test_mask)`` such that no
-    person appears in both the train and test sets.
+                     val_frac: float,
+                     holdout_frac: float,
+                     seed: int
+                     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return three boolean masks ``(train, val, holdout)`` such that no
+    person appears in more than one subset.
+
+    Persons are shuffled deterministically (using ``seed``) and then sliced
+    into the three groups.  The hold-out group is selected first so that
+    successive training runs always reserve the same subjects for it (as
+    long as the seed and the dataset are the same).
     """
+    if val_frac < 0 or holdout_frac < 0 or val_frac + holdout_frac >= 1:
+        raise ValueError(
+            "val_frac and holdout_frac must be non-negative and "
+            "their sum must be < 1.")
+
     rng = np.random.default_rng(seed)
     unique_persons = np.unique(persons)
     rng.shuffle(unique_persons)
-    n_test = max(1, int(round(len(unique_persons) * test_frac)))
-    test_persons = set(unique_persons[:n_test].tolist())
-    test_mask = np.array([p in test_persons for p in persons])
-    train_mask = ~test_mask
 
-    # Safety: if the random test split happens to miss an entire class,
-    # move one sample of that class from train to test to keep metrics
-    # well-defined.
-    for c in range(NUM_CLASSES):
-        if not np.any(test_mask & (y == c)):
-            candidates = np.where(train_mask & (y == c))[0]
-            if candidates.size > 0:
-                idx = int(rng.choice(candidates))
-                train_mask[idx] = False
-                test_mask[idx] = True
-    return train_mask, test_mask
+    n_total = len(unique_persons)
+    n_holdout = max(1, int(round(n_total * holdout_frac))) if holdout_frac > 0 else 0
+    n_val = max(1, int(round(n_total * val_frac))) if val_frac > 0 else 0
+    if n_holdout + n_val >= n_total:
+        raise ValueError("Not enough unique persons for the requested splits.")
+
+    holdout_persons = set(unique_persons[:n_holdout].tolist())
+    val_persons = set(unique_persons[n_holdout:n_holdout + n_val].tolist())
+
+    holdout_mask = np.array([p in holdout_persons for p in persons])
+    val_mask = np.array([p in val_persons for p in persons])
+    train_mask = ~(holdout_mask | val_mask)
+
+    # Safety: every class must appear at least once in val and holdout so
+    # that metrics are well defined.  If a class is missing, move one
+    # sample over from the train split.
+    def _ensure_class_coverage(target_mask: np.ndarray) -> None:
+        for c in range(NUM_CLASSES):
+            if not np.any(target_mask & (y == c)):
+                candidates = np.where(train_mask & (y == c))[0]
+                if candidates.size > 0:
+                    idx = int(rng.choice(candidates))
+                    train_mask[idx] = False
+                    target_mask[idx] = True
+
+    if n_val > 0:
+        _ensure_class_coverage(val_mask)
+    if n_holdout > 0:
+        _ensure_class_coverage(holdout_mask)
+
+    return train_mask, val_mask, holdout_mask
 
 
 def _plot_history(history, out_path: Path) -> None:
@@ -141,22 +181,65 @@ def _augment(x: tf.Tensor, y: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor]:
     return x, y
 
 
+def _save_holdout(out_dir: Path,
+                  X: np.ndarray, y: np.ndarray,
+                  persons: np.ndarray, filenames: np.ndarray) -> None:
+    """Persist the held-out test subset so it can be re-used by ``evaluate.py``."""
+    npz_path = out_dir / "holdout_test.npz"
+    list_path = out_dir / "holdout_files.txt"
+
+    np.savez_compressed(
+        npz_path,
+        X=X.astype(np.float32),
+        y=y.astype(np.int64),
+        persons=persons.astype(np.int32),
+        filenames=np.asarray(filenames),
+        class_names=np.array([ACTIVITY_NAMES[i + 1]
+                              for i in range(NUM_CLASSES)]),
+    )
+
+    unique_files = sorted(set(str(f) for f in filenames))
+    list_path.write_text("\n".join(unique_files) + "\n")
+
+    mb = npz_path.stat().st_size / (1024 * 1024)
+    print(f"Held-out test subset:")
+    print(f"  spectrograms : {len(X)}")
+    print(f"  source files : {len(unique_files)}")
+    print(f"  saved to     : {npz_path}  ({mb:.1f} MB)")
+    print(f"  file listing : {list_path}")
+
+
 def train(args: argparse.Namespace) -> None:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Loading dataset from {args.dataset} ...")
-    X, y, persons = _load_dataset(args.dataset)
+    X, y, persons, filenames = _load_dataset(args.dataset)
     print(f"  X={X.shape}  y={y.shape}  unique_persons={len(np.unique(persons))}")
 
-    train_mask, test_mask = _split_by_person(persons, y, args.test_frac, args.seed)
-    X_train, y_train = X[train_mask], y[train_mask]
-    X_test, y_test = X[test_mask], y[test_mask]
-    print(f"  train samples: {len(X_train)}  test samples: {len(X_test)}")
-    print(f"  train persons: {sorted(set(persons[train_mask].tolist()))[:10]}...")
-    print(f"  test persons : {sorted(set(persons[test_mask].tolist()))}")
+    train_mask, val_mask, holdout_mask = _split_by_person(
+        persons, y, args.val_frac, args.holdout_frac, args.seed)
 
-    # tf.data pipelines
+    X_train, y_train = X[train_mask], y[train_mask]
+    X_val, y_val = X[val_mask], y[val_mask]
+    X_hold, y_hold = X[holdout_mask], y[holdout_mask]
+
+    print("\nSplit summary (by person id):")
+    print(f"  train   : {len(X_train):>5} samples / "
+          f"{len(set(persons[train_mask].tolist())):>3} persons")
+    print(f"  val     : {len(X_val):>5} samples / "
+          f"{len(set(persons[val_mask].tolist())):>3} persons")
+    print(f"  holdout : {len(X_hold):>5} samples / "
+          f"{len(set(persons[holdout_mask].tolist())):>3} persons   "
+          "(reserved, NOT used for training)")
+    print(f"  holdout persons -> {sorted(set(persons[holdout_mask].tolist()))}")
+
+    _save_holdout(out_dir,
+                  X_hold, y_hold,
+                  persons[holdout_mask],
+                  filenames[holdout_mask])
+
+    # tf.data pipelines: only train + validation are seen during fit().
     train_ds = (
         tf.data.Dataset.from_tensor_slices((X_train, y_train))
         .shuffle(buffer_size=len(X_train), seed=args.seed)
@@ -165,7 +248,12 @@ def train(args: argparse.Namespace) -> None:
         .prefetch(tf.data.AUTOTUNE)
     )
     val_ds = (
-        tf.data.Dataset.from_tensor_slices((X_test, y_test))
+        tf.data.Dataset.from_tensor_slices((X_val, y_val))
+        .batch(args.batch_size)
+        .prefetch(tf.data.AUTOTUNE)
+    )
+    holdout_ds = (
+        tf.data.Dataset.from_tensor_slices((X_hold, y_hold))
         .batch(args.batch_size)
         .prefetch(tf.data.AUTOTUNE)
     )
@@ -183,6 +271,9 @@ def train(args: argparse.Namespace) -> None:
             save_best_only=True, mode="max", verbose=1),
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss", factor=0.5, patience=4, min_lr=1e-6),
+        tf.keras.callbacks.EarlyStopping(
+            monitor="val_accuracy", patience=12,
+            restore_best_weights=True, mode="max"),
     ]
 
     history = model.fit(
@@ -198,19 +289,33 @@ def train(args: argparse.Namespace) -> None:
     print(f"\nSaved final model to {final_model_path}")
     print(f"Best-val model saved to {ckpt_path}")
 
-    # Final evaluation + artefacts
-    loss, acc = model.evaluate(val_ds, verbose=0)
-    print(f"\nHold-out test accuracy: {acc:.4f}   loss: {loss:.4f}")
+    # Final evaluation on the validation split (used during training)
+    val_loss, val_acc = model.evaluate(val_ds, verbose=0)
+    print(f"\nValidation accuracy: {val_acc:.4f}   loss: {val_loss:.4f}")
 
-    y_pred = np.argmax(model.predict(val_ds, verbose=0), axis=1)
+    # Final evaluation on the held-out test subset (never seen by the model)
+    hold_loss, hold_acc = model.evaluate(holdout_ds, verbose=0)
+    print(f"Hold-out test accuracy: {hold_acc:.4f}   loss: {hold_loss:.4f}")
+
+    y_val_pred = np.argmax(model.predict(val_ds, verbose=0), axis=1)
+    y_hold_pred = np.argmax(model.predict(holdout_ds, verbose=0), axis=1)
+
     _plot_history(history, out_dir / "training_curves.png")
-    _plot_confusion(y_test, y_pred, out_dir / "confusion_matrix.png")
+    _plot_confusion(y_val, y_val_pred, out_dir / "confusion_matrix_val.png")
+    _plot_confusion(y_hold, y_hold_pred, out_dir / "confusion_matrix_holdout.png")
 
     with open(out_dir / "metrics.json", "w") as f:
         json.dump(
             {
-                "test_accuracy": float(acc),
-                "test_loss": float(loss),
+                "val_accuracy": float(val_acc),
+                "val_loss": float(val_loss),
+                "holdout_accuracy": float(hold_acc),
+                "holdout_loss": float(hold_loss),
+                "n_train_samples": int(len(X_train)),
+                "n_val_samples": int(len(X_val)),
+                "n_holdout_samples": int(len(X_hold)),
+                "holdout_persons": sorted(set(int(p) for p
+                                              in persons[holdout_mask])),
                 "history": {k: [float(v) for v in vs]
                             for k, vs in history.history.items()},
                 "class_names": [ACTIVITY_NAMES[i + 1]
@@ -232,8 +337,12 @@ def main() -> None:
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--dropout", type=float, default=0.5)
-    ap.add_argument("--test-frac", type=float, default=0.2,
-                    help="Fraction of persons held out for the test split")
+    ap.add_argument("--val-frac", type=float, default=0.15,
+                    help="Fraction of persons used as the validation split "
+                         "during training")
+    ap.add_argument("--holdout-frac", type=float, default=0.20,
+                    help="Fraction of persons reserved as the held-out test "
+                         "subset (never used for training)")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
     train(args)

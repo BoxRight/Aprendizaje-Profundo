@@ -302,7 +302,7 @@ def file_to_spectrograms(path: str | Path) -> List[Tuple[np.ndarray, int]]:
 def iter_radar_files(root: str | Path) -> Iterable[Path]:
     """Yield every parseable `.dat` file under ``root`` (non-recursively)."""
     root = Path(root)
-    for p in sorted(root.glob("*.dat")):
+    for p in sorted(root.glob("**/*.dat")):
         try:
             parse_filename(p)
         except ValueError:

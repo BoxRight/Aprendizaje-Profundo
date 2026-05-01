@@ -1,1 +1,4 @@
 Dataset_848.7z
+processed/
+__pycache__/
+training.log
